@@ -84,6 +84,7 @@ void setup() {
 void loop() {
     // Empty main loop. All processing is handled safely in the ISR.
 }
+```
 
 ## Advanced Configuration
 
