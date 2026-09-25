@@ -17,7 +17,7 @@ The TCAN4x5x uses a 20-pin VQFN package. The library relies on standard SPI comm
 ### Pin Configuration
 Below is the official pinout and description for the TCAN4x5x family:
 
-![Pin Configuration](oin_table.png)
+![Pin Configuration](pin_table.png)
 
 | TCAN Pin | Name | Description | Arduino Connection |
 | :--- | :--- | :--- | :--- |
