@@ -1,0 +1,63 @@
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+TCAN4x5x	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setSPISettings	KEYWORD2
+setCS	KEYWORD2
+setSPIPins	KEYWORD2
+resetSPISettings	KEYWORD2
+MCAN_EnableProtectedRegisters	KEYWORD2
+MCAN_DisableProtectedRegisters	KEYWORD2
+MCAN_ConfigureCCCRRegister	KEYWORD2
+MCAN_ConfigureDataTiming_Simple	KEYWORD2
+MCAN_ConfigureDataTiming_Raw	KEYWORD2
+MCAN_ConfigureNominalTiming_Simple	KEYWORD2
+MCAN_ConfigureNominalTiming_Raw	KEYWORD2
+MCAN_ConfigureGlobalFilter	KEYWORD2
+MCAN_ReadCCCRRegister	KEYWORD2
+MCAN_ReadDataTimingFD_Simple	KEYWORD2
+MCAN_ReadDataTimingFD_Raw	KEYWORD2
+MCAN_ReadNominalTiming_Simple	KEYWORD2
+MCAN_ReadNominalTiming_Raw	KEYWORD2
+MRAM_Clear	KEYWORD2
+MCAN_ReadInterrupts	KEYWORD2
+MCAN_ClearInterrupts	KEYWORD2
+MCAN_ClearInterruptsAll	KEYWORD2
+MCAN_ReadInterruptEnable	KEYWORD2
+MCAN_ConfigureInterruptEnable	KEYWORD2
+MRAM_Configure	KEYWORD2
+MCAN_TransmitBufferContents	KEYWORD2
+MCAN_WriteSIDFilter	KEYWORD2
+MCAN_ReadSIDFilter	KEYWORD2
+MCAN_WriteXIDFilter	KEYWORD2
+MCAN_ReadNextFIFO	KEYWORD2
+MCAN_ReadRXBuffer	KEYWORD2
+MCAN_DLCtoBytes	KEYWORD2
+MCAN_TXRXESC_DataByteValue	KEYWORD2
+MCAN_WriteTXBuffer	KEYWORD2
+TCAN4x5x_Device_ReadConfig	KEYWORD2
+TCAN4x5x_Device_ReadInterrupts	KEYWORD2
+TCAN4x5x_Device_ClearInterrupts	KEYWORD2
+TCAN4x5x_Device_ClearInterruptsAll	KEYWORD2
+TCAN4x5x_Device_ClearSPIERR	KEYWORD2
+TCAN4x5x_Device_ReadInterruptEnable	KEYWORD2
+TCAN4x5x_WDT_Reset	KEYWORD2
+TCAN4x5x_Device_Configure	KEYWORD2
+TCAN4x5x_Device_ConfigureInterruptEnable	KEYWORD2
+TCAN4x5x_Device_SetMode	KEYWORD2
+TCAN4x5x_Device_EnableTestMode	KEYWORD2
+TCAN4x5x_Device_DisableTestMode	KEYWORD2
+TCAN4x5x_WDT_Configure	KEYWORD2
+TCAN4x5x_WDT_Enable	KEYWORD2
+TCAN4x5x_WDT_Disable	KEYWORD2
+TCAN4x5x_Device_ReadDeviceVersion	KEYWORD2
+TCAN4x5x_WDT_Read	KEYWORD2
+TCAN4x5x_Device_ReadMode	KEYWORD2
+TCAN4x5x_Device_ReadTestMode	KEYWORD2
