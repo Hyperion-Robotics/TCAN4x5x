@@ -109,4 +109,3 @@ void setup() {
 
 ## License
 This library is released under the BSD 3-Clause License. It is built upon the foundational register maps and ANSI-C hardware abstraction layer originally developed and copyrighted by Texas Instruments Incorporated.
-```
