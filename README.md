@@ -119,8 +119,10 @@ The library pre-loads safe Texas Instruments default settings (500k/2M bit rates
 A key feature of this library is the ability to route specific High Priority CAN IDs to separate hardware pins (GPO1 or GPO2). Due to the physical silicon design of the TCAN4x5x family, GPO2 is permanently hardwired to internal MCAN_INT0, and GPIO1 is permanently hardwired to internal MCAN_INT1:
 
 GPIO1 Multiplexer Limits:
+![GPIO1 Configuration](GPO1_config.png)
 
 GPO2 Multiplexer Limits:
+![GPO2 Configuration](GPO2_config.png)
 
 Because of this physical hardware limitation, the library uses a software toggle (INT_0 or INT_1) inside setPriorityCANIDList() to digitally steer your priority messages down the correct internal pipe to match the physical pin you chose.
 
