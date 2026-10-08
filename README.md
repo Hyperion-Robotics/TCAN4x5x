@@ -4,10 +4,13 @@ A robust, hardware-agnostic C++ library for the Texas Instruments **TCAN4550** a
 
 This library takes Texas Instruments' low-level ANSI-C driver and wraps it into a modern, flexible Arduino interface. It is built specifically for bare-metal performance, bypassing slow polling loops in favor of true hardware Interrupt Service Routines (ISRs) and advanced internal hardware routing.
 
+> **Supported Architectures & Custom SPI Routing:**  
+> Compatible with all standard Arduino architectures (AVR, SAMD, Renesas UNO R4) using default hardware SPI pins, with built-in automatic SPI pin multiplexing (`TCAN4x5x(CS, MISO, MOSI, SCK)`) for **ESP32**, **RP2040 / RP2350**, **STM32**, and **Teensy**.
+
 ## Key Features
 * **True Hardware ISRs:** Utilizes a direct-return architecture (`TCAN_RX_Packet`) allowing you to write your own non-blocking interrupt routines without rigid static wrappers. Includes a clean `attachInterruptPin()` helper to eliminate Arduino boilerplate.
 * **Advanced Hardware Routing:** Natively map High Priority Messages (HPM) to physically trigger independent hardware pins like `GPO1` or `GPO2`.
-* **Hardware-Agnostic SPI:** Works out-of-the-box with standard 8-bit AVRs, while fully supporting custom SPI pin multiplexing for modern 32-bit architectures (ESP32, RP2040, Teensy).
+* **Cross-Platform Custom SPI:** Works out-of-the-box with standard 8-bit AVRs, while automatically handling architecture-specific SPI pin remapping inside `begin()` for modern 32-bit microcontrollers (**ESP32, RP2040, RP2350, STM32, and Teensy**).
 * **Payload Struct Packing:** Send and receive complex C++ data structs directly over the CAN-FD data phase.
 
 ## Hardware & Wiring
