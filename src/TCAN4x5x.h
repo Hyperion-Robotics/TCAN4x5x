@@ -47,6 +47,16 @@
 #include "TCAN4x5x_Reg.h"
 #include "TCAN4x5x_Data_Structs.h"
 
+#define TCAN4x5x_VERSION "1.0.0"
+
+#define INT_0 false
+#define INT_1 true
+
+// Safe cross-platform fallback for ESP32's IRAM_ATTR
+#ifndef IRAM_ATTR
+#define IRAM_ATTR
+#endif
+
 //! If TCAN4x5x_MCAN_CACHE_CONFIGURATION is defined, then the read and write to MRAM functions will cache certain values to reduce the number of SPI reads necessary to send or receive a packet
 #define TCAN4x5x_MCAN_CACHE_CONFIGURATION
 
@@ -119,8 +129,9 @@ public:
     // ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*
     //                         Hardware Interrupt Routing
     // ~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*
-    void setGPO2CANIDList(uint16_t idList[], uint8_t listSize);
-    void setGPIO1CANIDList(uint16_t idList[], uint8_t listSize);
+    void attachInterruptPin(uint8_t mcuPin, void (*isr)(void));
+
+    void setPriorityCANIDList(uint16_t idList[], uint8_t listSize, bool intLine);
     
     void setGPO2Interrupt(void);
     void setGPIO1Interrupt(void);
@@ -142,6 +153,8 @@ public:
     bool MCAN_ConfigureNominalTiming_Simple(TCAN4x5x_MCAN_Nominal_Timing_Simple *nomTiming);
     bool MCAN_ConfigureNominalTiming_Raw(TCAN4x5x_MCAN_Nominal_Timing_Raw *nomTiming);
     bool MCAN_ConfigureGlobalFilter(TCAN4x5x_MCAN_Global_Filter_Configuration *gfc);
+    bool MCAN_AddBlacklistID(uint16_t id, uint8_t filterIndex);
+    bool MCAN_RoutePriorityID(uint16_t id, uint8_t filterIndex);
 
     void MCAN_ReadCCCRRegister(TCAN4x5x_MCAN_CCCR_Config *cccrConfig);
     void MCAN_ReadDataTimingFD_Simple(TCAN4x5x_MCAN_Data_Timing_Simple *dataTiming);

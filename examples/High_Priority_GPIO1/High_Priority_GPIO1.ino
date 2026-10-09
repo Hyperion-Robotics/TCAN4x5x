@@ -37,13 +37,13 @@ void setup() {
     myCAN.setGPIO1Interrupt();
 
     // Attach to the correct GPIO1 pin, NOT the nINT pin
-    pinMode(GPIO1_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(GPIO1_PIN), priorityISR, FALLING);
-
+    myCAN.attachInterruptPin(GPIO1_PIN, priorityISR);
+    
+    // Initialize the CAN controller
     myCAN.begin(&SPI);
     
     // Apply the priority list to the hardware filters (Must be done after begin)
-    myCAN.setGPIO1CANIDList(priorityIDs, numPriorityIDs);
+    myCAN.setPriorityCANIDList(priorityIDs, numPriorityIDs, INT_1);// INT_1 is the default for GPIO1 routing
     
     Serial.println("CAN Controller configured for GPIO1 priority filtering.");
 }

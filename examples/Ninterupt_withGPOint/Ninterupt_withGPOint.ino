@@ -41,16 +41,13 @@ void setup() {
     myCAN.setGPIO1Interrupt(); // Configures hardware pin
 
     // 4. Attach MCU interrupts to BOTH pins
-    pinMode(NINT_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(NINT_PIN), standardISR, FALLING);
-    
-    pinMode(GPIO1_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(GPIO1_PIN), priorityISR, FALLING);
+    myCAN.attachInterruptPin(NINT_PIN, standardISR); // Standard Messages
+    myCAN.attachInterruptPin(GPIO1_PIN, priorityISR); // Priority Messages
 
     myCAN.begin(&SPI);
     
     // 5. Apply the priority list (routes HPM to GPIO1)
-    myCAN.setGPIO1CANIDList(priorityIDs, 2); 
+    myCAN.setPriorityCANIDList(priorityIDs, numPriorityIDs, INT_1);// INT_1 is the default for GPIO1 routing 
 }
 
 void loop() {

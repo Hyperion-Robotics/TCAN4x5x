@@ -32,8 +32,8 @@ void setup() {
     Serial.begin(115200);
     while (!Serial);
 
-    pinMode(NINT_PIN, INPUT_PULLUP);
-    attachInterrupt(digitalPinToInterrupt(NINT_PIN), canISR, FALLING);
+    // Attach the ISR to the correct pin (nINT)
+    myCAN.attachInterruptPin(NINT_PIN, canISR);
 
     Serial.println("Starting CAN Controller...");
     myCAN.begin(&SPI);

@@ -1,18 +1,54 @@
 #######################################
 # Datatypes (KEYWORD1)
 #######################################
-
 TCAN4x5x	KEYWORD1
+TCAN_RX_Packet	KEYWORD1
+TCAN4x5x_MCAN_RX_Header	KEYWORD1
+TCAN4x5x_MCAN_TX_Header	KEYWORD1
+TCAN4x5x_MRAM_Config	KEYWORD1
+TCAN4x5x_DEV_CONFIG	KEYWORD1
+TCAN4x5x_MCAN_Global_Filter_Configuration	KEYWORD1
+TCAN4x5x_MCAN_Interrupts	KEYWORD1
+TCAN4x5x_MCAN_Interrupt_Enable	KEYWORD1
+TCAN4x5x_Device_Interrupts	KEYWORD1
+TCAN4x5x_Device_Interrupt_Enable	KEYWORD1
+TCAN4x5x_MCAN_SID_Filter	KEYWORD1
+TCAN4x5x_MCAN_XID_Filter	KEYWORD1
+TCAN4x5x_MCAN_Data_Timing_Simple	KEYWORD1
+TCAN4x5x_MCAN_Data_Timing_Raw	KEYWORD1
+TCAN4x5x_MCAN_Nominal_Timing_Simple	KEYWORD1
+TCAN4x5x_MCAN_Nominal_Timing_Raw	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
+# Setup & Initialization
 begin	KEYWORD2
+setNominalBitRate	KEYWORD2
+setDataBitRate	KEYWORD2
+setMRAMConfig	KEYWORD2
+setDeviceConfig	KEYWORD2
+setGlobalFilterConfig	KEYWORD2
 setSPISettings	KEYWORD2
+resetSPISettings	KEYWORD2
 setCS	KEYWORD2
 setSPIPins	KEYWORD2
-resetSPISettings	KEYWORD2
+
+# Hardware Interrupt Routing & Handlers
+attachInterruptPin	KEYWORD2
+setPriorityCANIDList	KEYWORD2
+setGPO2Interrupt	KEYWORD2
+setGPIO1Interrupt	KEYWORD2
+handleReceiveISR	KEYWORD2
+handleGPOISR	KEYWORD2
+handleGPIO1ISR	KEYWORD2
+
+# Advanced Filtering API
+MCAN_AddBlacklistID	KEYWORD2
+MCAN_RoutePriorityID	KEYWORD2
+
+# MCAN Register Operations
 MCAN_EnableProtectedRegisters	KEYWORD2
 MCAN_DisableProtectedRegisters	KEYWORD2
 MCAN_ConfigureCCCRRegister	KEYWORD2
@@ -26,38 +62,53 @@ MCAN_ReadDataTimingFD_Simple	KEYWORD2
 MCAN_ReadDataTimingFD_Raw	KEYWORD2
 MCAN_ReadNominalTiming_Simple	KEYWORD2
 MCAN_ReadNominalTiming_Raw	KEYWORD2
-MRAM_Clear	KEYWORD2
 MCAN_ReadInterrupts	KEYWORD2
 MCAN_ClearInterrupts	KEYWORD2
 MCAN_ClearInterruptsAll	KEYWORD2
 MCAN_ReadInterruptEnable	KEYWORD2
 MCAN_ConfigureInterruptEnable	KEYWORD2
+
+# MRAM & FIFO Operations
+MRAM_Clear	KEYWORD2
 MRAM_Configure	KEYWORD2
 MCAN_TransmitBufferContents	KEYWORD2
 MCAN_WriteSIDFilter	KEYWORD2
 MCAN_ReadSIDFilter	KEYWORD2
 MCAN_WriteXIDFilter	KEYWORD2
+MCAN_ReadXIDFilter	KEYWORD2
 MCAN_ReadNextFIFO	KEYWORD2
 MCAN_ReadRXBuffer	KEYWORD2
 MCAN_DLCtoBytes	KEYWORD2
 MCAN_TXRXESC_DataByteValue	KEYWORD2
 MCAN_WriteTXBuffer	KEYWORD2
-TCAN4x5x_Device_ReadConfig	KEYWORD2
-TCAN4x5x_Device_ReadInterrupts	KEYWORD2
-TCAN4x5x_Device_ClearInterrupts	KEYWORD2
-TCAN4x5x_Device_ClearInterruptsAll	KEYWORD2
-TCAN4x5x_Device_ClearSPIERR	KEYWORD2
-TCAN4x5x_Device_ReadInterruptEnable	KEYWORD2
-TCAN4x5x_WDT_Reset	KEYWORD2
-TCAN4x5x_Device_Configure	KEYWORD2
-TCAN4x5x_Device_ConfigureInterruptEnable	KEYWORD2
-TCAN4x5x_Device_SetMode	KEYWORD2
-TCAN4x5x_Device_EnableTestMode	KEYWORD2
-TCAN4x5x_Device_DisableTestMode	KEYWORD2
-TCAN4x5x_WDT_Configure	KEYWORD2
-TCAN4x5x_WDT_Enable	KEYWORD2
-TCAN4x5x_WDT_Disable	KEYWORD2
-TCAN4x5x_Device_ReadDeviceVersion	KEYWORD2
-TCAN4x5x_WDT_Read	KEYWORD2
-TCAN4x5x_Device_ReadMode	KEYWORD2
-TCAN4x5x_Device_ReadTestMode	KEYWORD2
+
+# Device & Hardware Faults
+Device_ReadConfig	KEYWORD2
+Device_Configure	KEYWORD2
+Device_ReadInterrupts	KEYWORD2
+Device_ClearInterrupts	KEYWORD2
+Device_ClearInterruptsAll	KEYWORD2
+Device_ClearSPIERR	KEYWORD2
+Device_ReadInterruptEnable	KEYWORD2
+Device_ConfigureInterruptEnable	KEYWORD2
+Device_SetMode	KEYWORD2
+Device_ReadMode	KEYWORD2
+Device_EnableTestMode	KEYWORD2
+Device_DisableTestMode	KEYWORD2
+Device_ReadTestMode	KEYWORD2
+Device_ReadDeviceVersion	KEYWORD2
+
+# Watchdog Operations
+WDT_Reset	KEYWORD2
+WDT_Configure	KEYWORD2
+WDT_Enable	KEYWORD2
+WDT_Disable	KEYWORD2
+WDT_Read	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+RXFIFO0	LITERAL1
+RXFIFO1	LITERAL1
+INT_0	LITERAL1
+INT_1	LITERAL1

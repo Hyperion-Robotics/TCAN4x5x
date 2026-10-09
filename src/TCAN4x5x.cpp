@@ -169,25 +169,53 @@ void TCAN4x5x::begin(SPIClass *spiPort, SPISettings spiSettings) {
     tcan_port = spiPort;
     tcan_port_settings = spiSettings;
 
-    // 1. Initialize SPI Pins (Your existing multiplexer logic goes here)
+    // 1. Initialize CS Pin
     pinMode(nCS, OUTPUT);
     digitalWrite(nCS, HIGH);
     
-    // [Insert your existing ESP32/RP2040/Teensy custom SPI pin logic here]
-    // tcan_port->begin();
+    // 2. Cross-Platform SPI Pin Multiplexing & Initialization
+    bool hasCustomPins = (MISO != 0xFF && MOSI != 0xFF && SCK != 0xFF);
 
-    // 2. Hardware initialization sequence using the stored structs
+    #if defined(ARDUINO_ARCH_ESP32)
+        if (hasCustomPins) {
+            tcan_port->begin(SCK, MISO, MOSI, nCS);
+        } else {
+            tcan_port->begin();
+        }
+    #elif defined(ARDUINO_ARCH_RP2040) // Covers both RP2040 and RP2350
+        if (hasCustomPins) {
+            static_cast<SPIClassRP2040*>(tcan_port)->setRX(MISO);
+            static_cast<SPIClassRP2040*>(tcan_port)->setTX(MOSI);
+            static_cast<SPIClassRP2040*>(tcan_port)->setSCK(SCK);
+        }
+        tcan_port->begin();
+    #elif defined(ARDUINO_ARCH_STM32)
+        if (hasCustomPins) {
+            tcan_port->setMISO(MISO);
+            tcan_port->setMOSI(MOSI);
+            tcan_port->setSCLK(SCK);
+        }
+        tcan_port->begin();
+    #elif defined(CORE_TEENSY)
+        if (hasCustomPins) {
+            tcan_port->setMISO(MISO);
+            tcan_port->setMOSI(MOSI);
+            tcan_port->setSCK(SCK);
+        }
+        tcan_port->begin();
+    #else
+        tcan_port->begin();
+    #endif
+
+    // 3. Hardware initialization sequence using the stored structs
     Device_ClearSPIERR();
 
     // Clear and configure device interrupts
     TCAN4x5x_Device_Interrupt_Enable dev_ie = {0};
     Device_ConfigureInterruptEnable(&dev_ie);
 
-    TCAN4x5x_Device_Interrupts dev_ir = {0};
-    Device_ReadInterrupts(&dev_ir);
-    if (dev_ir.PWRON) {
-        Device_ClearInterrupts(&dev_ir);
-    }
+    // Clear all latched power-on/undervoltage interrupts
+    Device_ClearInterruptsAll();
 
     // Enter protected mode and apply the internal structs to the hardware registers
     MCAN_EnableProtectedRegisters();
@@ -215,7 +243,6 @@ void TCAN4x5x::setSPISettings(SPISettings spiSettings){
 }
 
 void TCAN4x5x::setCS(uint8_t csPin){
-    //make th old pin floating again
     pinMode(nCS, INPUT);
 
     nCS = csPin;
@@ -228,11 +255,28 @@ void TCAN4x5x::setSPIPins(uint8_t MISO_Pin, uint8_t MOSI_Pin, uint8_t SCK_Pin){
     MOSI = MOSI_Pin;
     SCK = SCK_Pin;
 
-    tcan_port->begin(SCK, MISO, MOSI, nCS);
-}
-
-void TCAN4x5x::resetSPISettings(void){
-    tcan_port_settings = SPI_DEFAULT_SETTINGS;
+    if (tcan_port != nullptr) {
+        #if defined(ARDUINO_ARCH_ESP32)
+            tcan_port->begin(SCK, MISO, MOSI, nCS);
+        #elif defined(ARDUINO_ARCH_RP2040)
+            static_cast<SPIClassRP2040*>(tcan_port)->setRX(MISO);
+            static_cast<SPIClassRP2040*>(tcan_port)->setTX(MOSI);
+            static_cast<SPIClassRP2040*>(tcan_port)->setSCK(SCK);
+            tcan_port->begin();
+        #elif defined(ARDUINO_ARCH_STM32)
+            tcan_port->setMISO(MISO);
+            tcan_port->setMOSI(MOSI);
+            tcan_port->setSCLK(SCK);
+            tcan_port->begin();
+        #elif defined(CORE_TEENSY)
+            tcan_port->setMISO(MISO);
+            tcan_port->setMOSI(MOSI);
+            tcan_port->setSCK(SCK);
+            tcan_port->begin();
+        #else
+            tcan_port->begin();
+        #endif
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -264,73 +308,40 @@ void TCAN4x5x::setGPIO1Interrupt(void) {
     AHB_WRITE_32(REG_DEV_MODES_AND_PINS, reg0800);
 }
 
+void TCAN4x5x::attachInterruptPin(uint8_t mcuPin, void (*isr)(void)) {
+    // Automatically configure the pin mode
+    pinMode(mcuPin, INPUT_PULLUP);
+    
+    // Automatically attach the user's custom ISR function to trigger on FALLING edge
+    attachInterrupt(digitalPinToInterrupt(mcuPin), isr, FALLING);
+}
+
 // ---------------------------------------------------------------------------
 // High Priority Message Filter List Generator
 // ---------------------------------------------------------------------------
-
-void TCAN4x5x::setGPO2CANIDList(uint16_t idList[], uint8_t listSize) {
+void TCAN4x5x::setPriorityCANIDList(uint16_t idList[], uint8_t listSize, bool intLine) {
     
-    // 1. Map the High Priority Message (HPM) interrupt to M_CAN_INT 0
-    // Read the Interrupt Line Select register (0x1058)
+    // 1. Map the High Priority Message (HPM) interrupt
     uint32_t ils = AHB_READ_32(REG_MCAN_ILS);
-    ils &= ~(1UL << 8); // Clear bit 8 (HPML) to route HPM to m_can_int0
-    AHB_WRITE_32(REG_MCAN_ILS, ils);
-
-    // 2. Enable the High Priority Message (HPM) interrupt
-    // Read the Interrupt Enable register (0x1054)
-    uint32_t ie = AHB_READ_32(REG_MCAN_IE);
-    ie |= (1UL << 8); // Set bit 8 (HPME) to enable the HPM interrupt
-    AHB_WRITE_32(REG_MCAN_IE, ie);
-
-    // 3. Enable the physical Interrupt Line 0
-    // Read the Interrupt Line Enable register (0x105C)
-    uint32_t ile = AHB_READ_32(REG_MCAN_ILE);
-    ile |= (1UL << 0); // Set bit 0 (EINT0) to enable m_can_int0
-    AHB_WRITE_32(REG_MCAN_ILE, ile);
-
-    // 4. Unlock protected registers to allow writing to the MRAM filter list
-    MCAN_EnableProtectedRegisters();
-
-    // 5. Iterate through the array and write each CAN ID to the MRAM filter list
-    for (uint8_t i = 0; i < listSize; i++) {
-        TCAN4x5x_MCAN_SID_Filter filter = {0};
-        
-        // Configure as a classic filter matching an exact ID
-        filter.SFT = TCAN4x5x_SID_SFT_CLASSIC;
-        
-        // Mark this specific filter element as a Priority Message 
-        // and automatically store the payload in RX FIFO 0
-        filter.SFEC = TCAN4x5x_SID_SFEC_PRIORITYSTORERX0; 
-        
-        filter.SFID1 = idList[i]; // The exact CAN ID to match
-        filter.SFID2 = 0x7FF;     // 0x7FF mask ensures an exact 11-bit match
-
-        // Write the configured filter into the MRAM at index 'i'
-        MCAN_WriteSIDFilter(i, &filter);
+    if (intLine == INT_1) {
+        ils |= (1UL << 8);  // SET bit 8 to route HPM to m_can_int1 (GPIO1)
+    } else {
+        ils &= ~(1UL << 8); // CLEAR bit 8 to route HPM to m_can_int0 (GPO2)
     }
-
-    // 6. Lock protected registers to resume normal operation
-    MCAN_DisableProtectedRegisters();
-}
-
-void TCAN4x5x::setGPIO1CANIDList(uint16_t idList[], uint8_t listSize) {
-    
-    // 1. Map the High Priority Message (HPM) interrupt to M_CAN_INT 1 (for GPIO1)
-    // Read the Interrupt Line Select register (0x1058)
-    uint32_t ils = AHB_READ_32(REG_MCAN_ILS);
-    ils |= (1UL << 8); // SET bit 8 (HPML) to route HPM to m_can_int1
     AHB_WRITE_32(REG_MCAN_ILS, ils);
 
     // 2. Enable the High Priority Message (HPM) interrupt
-    // Read the Interrupt Enable register (0x1054)
     uint32_t ie = AHB_READ_32(REG_MCAN_IE);
     ie |= (1UL << 8); // Set bit 8 (HPME) to enable the HPM interrupt
     AHB_WRITE_32(REG_MCAN_IE, ie);
 
-    // 3. Enable the physical Interrupt Line 1 (EINT1)
-    // Read the Interrupt Line Enable register (0x105C)
+    // 3. Enable the physical Interrupt Line
     uint32_t ile = AHB_READ_32(REG_MCAN_ILE);
-    ile |= (1UL << 1); // Set bit 1 (EINT1) to enable m_can_int1
+    if (intLine == INT_1) {
+        ile |= (1UL << 1); // Enable EINT1
+    } else {
+        ile |= (1UL << 0); // Enable EINT0
+    }
     AHB_WRITE_32(REG_MCAN_ILE, ile);
 
     // 4. Unlock protected registers to allow writing to the MRAM filter list
@@ -340,17 +351,11 @@ void TCAN4x5x::setGPIO1CANIDList(uint16_t idList[], uint8_t listSize) {
     for (uint8_t i = 0; i < listSize; i++) {
         TCAN4x5x_MCAN_SID_Filter filter = {0};
         
-        // Configure as a classic filter matching an exact ID
         filter.SFT = TCAN4x5x_SID_SFT_CLASSIC;
-        
-        // Mark this specific filter element as a Priority Message 
-        // and automatically store the payload in RX FIFO 0
         filter.SFEC = TCAN4x5x_SID_SFEC_PRIORITYSTORERX0; 
-        
-        filter.SFID1 = idList[i]; // The exact CAN ID to match
-        filter.SFID2 = 0x7FF;     // 0x7FF mask ensures an exact 11-bit match
+        filter.SFID1 = idList[i]; 
+        filter.SFID2 = 0x7FF;     
 
-        // Write the configured filter into the MRAM at index 'i'
         MCAN_WriteSIDFilter(i, &filter);
     }
 
@@ -492,6 +497,7 @@ bool TCAN4x5x::MCAN_DisableProtectedRegisters(void) {
  */
 bool TCAN4x5x::MCAN_ConfigureCCCRRegister(TCAN4x5x_MCAN_CCCR_Config *cccrConfig){
     uint32_t value, readValue;
+    (void)readValue; // Silence unused warning
 
 
     value = cccrConfig->word;
@@ -879,6 +885,7 @@ bool TCAN4x5x::MCAN_ConfigureNominalTiming_Raw(TCAN4x5x_MCAN_Nominal_Timing_Raw 
  */
 bool TCAN4x5x::MCAN_ConfigureGlobalFilter(TCAN4x5x_MCAN_Global_Filter_Configuration *gfc){
     uint32_t writeValue, readValue;
+    (void)readValue; // Silence unused warning
 
 
     writeValue = (gfc->word & REG_BITS_MCAN_GFC_MASK);
@@ -917,8 +924,9 @@ bool TCAN4x5x::MRAM_Configure(TCAN4x5x_MRAM_Config *MRAMConfig){
     uint32_t registerValue = 0;             // Used to create the 32-bit word to write to each register
     uint32_t readValue = 0;
     uint8_t MRAMValue;
-
-
+    
+    
+    (void)readValue; // Silence unused warning
     // First the 11-bit filter section can be setup.
     MRAMValue = MRAMConfig->SIDNumElements;
     if (MRAMValue > 128)
@@ -1155,7 +1163,7 @@ void TCAN4x5x::MRAM_Clear(void){
 uint8_t TCAN4x5x::MCAN_ReadNextFIFO(TCAN4x5x_MCAN_FIFO_Enum FIFODefine, TCAN4x5x_MCAN_RX_Header *header, uint8_t dataPayload[]){
     uint32_t readData;
     uint16_t startAddress;
-    uint8_t i, getIndex, elementSize;
+    uint8_t i = 0, getIndex, elementSize;
 
     // Get the get buffer location and size, depending on the source type
     switch (FIFODefine)
@@ -1289,7 +1297,7 @@ uint8_t TCAN4x5x::MCAN_ReadNextFIFO(TCAN4x5x_MCAN_FIFO_Enum FIFODefine, TCAN4x5x
 uint8_t TCAN4x5x::MCAN_ReadRXBuffer(uint8_t bufIndex, TCAN4x5x_MCAN_RX_Header *header, uint8_t dataPayload[]){
     uint32_t readData;
     uint16_t startAddress;
-    uint8_t i, getIndex, elementSize;
+    uint8_t i = 0, getIndex, elementSize;
 
     // Get the get buffer location and size
     getIndex = bufIndex;
@@ -1673,6 +1681,72 @@ bool TCAN4x5x::MCAN_ReadXIDFilter(uint8_t filterIndex, TCAN4x5x_MCAN_XID_Filter 
     filter->EFID2 = readData & 0x1FFFFFFF;
 
     return true;
+}
+
+/**
+ * @brief Blacklist a CAN ID so the hardware drops it silently
+ * 
+ * Configures a standard ID filter to reject the specified CAN ID.
+ * The microcontroller will not be interrupted when this ID appears on the bus.
+ *
+ * @param id The 11-bit standard CAN ID to reject
+ * @param filterIndex The MRAM filter array index to store this rule in (0 to 127)
+ * @return true if successful, false otherwise
+ */
+bool TCAN4x5x::MCAN_AddBlacklistID(uint16_t id, uint8_t filterIndex) {
+    TCAN4x5x_MCAN_SID_Filter filter = {0};
+    
+    // Set to Classic Filter (SFT = 2), Reject Match (SFEC = 3)
+    filter.word = (2UL << 30) | (3UL << 27) | ((uint32_t)id << 16) | 0x7FF;
+    
+    MCAN_EnableProtectedRegisters();
+    bool result = MCAN_WriteSIDFilter(filterIndex, &filter);
+    MCAN_DisableProtectedRegisters();
+    
+    return result;
+}
+
+/**
+ * @brief Route a specific CAN ID exclusively to GPO2 (RX FIFO 1)
+ * 
+ * Configures the hardware to store this ID in RX FIFO 1 and automatically maps 
+ * the RX FIFO 1 New Message interrupt (RF1N) to the physical GPO2 pin.
+ *
+ * @param id The 11-bit standard CAN ID to route
+ * @param filterIndex The MRAM filter array index to store this rule in (0 to 127)
+ * @return true if successful, false otherwise
+ */
+bool TCAN4x5x::MCAN_RoutePriorityID(uint16_t id, uint8_t filterIndex) {
+    TCAN4x5x_MCAN_SID_Filter filter = {0};
+    
+    // Set to Classic Filter (SFT = 2), Store in RX FIFO 1 (SFEC = 2)
+    filter.word = (2UL << 30) | (2UL << 27) | ((uint32_t)id << 16) | 0x7FF;
+    
+    MCAN_EnableProtectedRegisters();
+    bool result = MCAN_WriteSIDFilter(filterIndex, &filter);
+    
+    if (result) {
+        // Enable RX FIFO 1 New Message Interrupt (RF1NE - Bit 4)
+        uint32_t ie = AHB_READ_32(REG_MCAN_IE);
+        AHB_WRITE_32(REG_MCAN_IE, ie | (1UL << 4));
+        
+        // Route RX FIFO 1 Interrupts to INT1 (Bit 4 in ILS register)
+        uint32_t ils = AHB_READ_32(REG_MCAN_ILS);
+        AHB_WRITE_32(REG_MCAN_ILS, ils | (1UL << 4));
+        
+        // Enable physical hardware line EINT1 (Bit 1 in ILE register)
+        uint32_t ile = AHB_READ_32(REG_MCAN_ILE);
+        AHB_WRITE_32(REG_MCAN_ILE, ile | (1UL << 1));
+    }
+    
+    MCAN_DisableProtectedRegisters();
+    
+    // Ensure the physical multiplexer connects INT1 to the GPO2 pin
+    if (result) {
+        setGPO2Interrupt();
+    }
+    
+    return result;
 }
 
 
