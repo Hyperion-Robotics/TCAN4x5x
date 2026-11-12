@@ -35,7 +35,7 @@ Below is the official pinout and description for the TCAN4x5x family:
 ### Example Board Layout
 For custom PCB designs, ensure traces for the 40 MHz crystal (Pins 1 and 20) are length-matched, and appropriate bypass capacitors are placed near the supply pins.
 
-![Example Layout](pcb_excample.png)
+![Example Layout](pcb_example.png)
 
 ## Installation
 
